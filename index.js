@@ -12,7 +12,7 @@ const Twitter = new twit(config);
 
 let retweet = function() {
   let params = {
-      q: '#coding, #javascript, #typescript', // REQUIRED
+      q: '#coding, #javascript, #typescript, #python', // REQUIRED
       result_type: 'recent',
       lang: 'en'
   }
