@@ -12,7 +12,7 @@ const Twitter = new twit(config);
 
 let retweet = function() {
   let params = {
-      q: '#coding', // REQUIRED
+      q: '#coding, #javascript, #typescript', // REQUIRED
       result_type: 'recent',
       lang: 'en'
   }
@@ -40,7 +40,6 @@ let retweet = function() {
     }
       else {
           // catch all log if the search could not be executed
-        console.log(data.errors[0]);
         console.log('Could not search tweets.');
       }
   });
