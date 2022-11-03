@@ -12,15 +12,15 @@ const Twitter = new twit(config);
 
 let retweet = function() {
   let params = {
-      q: '#coding, #javascript, #typescript, #python', // REQUIRED
-      result_type: 'recent',
+      q: '#brazil, #worldcup',  // REQUIRED
+      result_type: 'mixed',
       lang: 'en'
   }
   Twitter.get('search/tweets', params, function(err, data) {
       // if there is no error
       if (!err) {
          // loop through the first 4 returned tweets
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 6; i++) {
           // iterate through those first four defining a rtId that is equal to the value of each of those tweets' ids
         let rtId = data.statuses[i].id_str;
           // the post action
