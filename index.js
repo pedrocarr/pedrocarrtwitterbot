@@ -1,5 +1,7 @@
-const twit = require('twit');
-require('dotenv').config({ path: '.env' });
+import twit from 'twit';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env'});
 
 const config = {
   consumer_key: process.env.CONSUMER_KEY,
@@ -10,7 +12,7 @@ const config = {
 
 const Twitter = new twit(config);
 
-let retweet = function() {
+export default function retweet() {
   let params = {
       q: '#development, #javascript',  // REQUIRED
       result_type: 'mixed',
@@ -44,5 +46,3 @@ let retweet = function() {
       }
   });
 }
-retweet();
-setInterval(retweet, 600000);
