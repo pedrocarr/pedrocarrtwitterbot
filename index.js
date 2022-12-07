@@ -12,7 +12,7 @@ const Twitter = new twit(config);
 
 let retweet = function() {
   let params = {
-      q: '#brazil, #worldcup',  // REQUIRED
+      q: '#development, #javascript',  // REQUIRED
       result_type: 'mixed',
       lang: 'en'
   }
