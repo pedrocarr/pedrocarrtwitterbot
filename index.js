@@ -14,7 +14,7 @@ const Twitter = new twit(config);
 
 export default function retweet() {
   let params = {
-      q: '#development, #javascript',  // REQUIRED
+      q: '#javascript, #react, #node',   // REQUIRED
       result_type: 'mixed',
       lang: 'en'
   }
@@ -22,7 +22,7 @@ export default function retweet() {
       // if there is no error
       if (!err) {
          // loop through the first 4 returned tweets
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 10; i++) {
           // iterate through those first four defining a rtId that is equal to the value of each of those tweets' ids
         let rtId = data.statuses[i].id_str;
           // the post action
