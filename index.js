@@ -15,7 +15,7 @@ const Twitter = new twit(config);
 
 export default function retweet() {
   let params = {
-      q: '#javascript, #react, #node, #testing, #development',   // REQUIRED
+      q: '#java, #npm',   // REQUIRED
       result_type: 'mixed',
       lang: 'en'
   }
