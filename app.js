@@ -1,16 +1,13 @@
 import express from "express";
-import retweet from "./index.js";
 const app = express();
-const port = 3000;
+const port = 4000;
+import twitterPost from './index.js';
 
 
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`listening on port ${port}`);
 });
+twitterPost()
 
-retweet();
-setInterval(() => {
-  retweet();
-}, 600000);
 

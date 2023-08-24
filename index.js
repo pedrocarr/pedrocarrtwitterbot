@@ -1,49 +1,146 @@
-import twit from 'twit';
-import dotenv from 'dotenv';
+import got from 'got'
+import crypto from 'crypto'
+import OAuth from 'oauth-1.0a';
+import qs from 'querystring'
+import readline from 'readline'
+
+const readlineInstance = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 
-dotenv.config({ path: '.env'});
+// The code below sets the consumer key and consumer secret from your environment variables
+// To set environment variables on macOS or Linux, run the export commands below from the terminal:
+// export CONSUMER_KEY='YOUR-KEY'
+// export CONSUMER_SECRET='YOUR-SECRET'
+const consumer_key = process.env.CONSUMER_KEY;
+const consumer_secret = process.env.CONSUMER_SECRET;
 
-const config = {
-  consumer_key: process.env.CONSUMER_KEY,
-  consumer_secret: process.env.CONSUMER_SECRET,
-  access_token: process.env.ACCESS_TOKEN,
-  access_token_secret: process.env.ACCESS_TOKEN_SECRET
+
+
+// Be sure to add replace the text of the with the text you wish to Tweet.
+// You can also add parameters to post polls, quote Tweets, Tweet with reply settings, and Tweet to Super Followers in addition to other features.
+const data = {
+  "text": "Hello world!"
+};
+
+const endpointURL = `https://api.twitter.com/2/tweets`;
+
+// this example uses PIN-based OAuth to authorize the user
+const requestTokenURL = 'https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write';
+const authorizeURL = new URL('https://api.twitter.com/oauth/authorize');
+const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
+const oauth = OAuth({
+  consumer: {
+    key: consumer_key,
+    secret: consumer_secret
+  },
+  signature_method: 'HMAC-SHA1',
+  hash_function: (baseString, key) => crypto.createHmac('sha1', key).update(baseString).digest('base64')
+});
+
+async function input(prompt) {
+  return new Promise(async (resolve, reject) => {
+    readlineInstance.question(prompt, (out) => {
+      readlineInstance.close();
+      resolve(out);
+    });
+  });
 }
 
-const Twitter = new twit(config);
+async function requestToken() {
+  const authHeader = oauth.toHeader(oauth.authorize({
+    url: requestTokenURL,
+    method: 'POST'
+  }));
 
-export default function retweet() {
-  let params = {
-      q: '#emplifi',   // REQUIRED
-      result_type: 'mixed',
-      lang: 'en'
-  }
-  Twitter.get('search/tweets', params, function(err, data) {
-      // if there is no error
-      if (!err) {
-         // loop through the first 4 returned tweets
-        for (let i = 0; i < 1; i++) {
-          // iterate through those first four defining a rtId that is equal to the value of each of those tweets' ids
-        let rtId = data.statuses[i].id_str;
-          // the post action
-        Twitter.post('statuses/retweet/:id', {
-          // setting the id equal to the rtId variable
-          id: rtId
-          // log response and log error
-        }, function(err, response) {
-          if (response) {
-            console.log('Successfully retweeted');
-          }
-          if (err) {
-            console.log(err);
-          }
-        });
-      }
+  const req = await got.post(requestTokenURL, {
+    headers: {
+      Authorization: authHeader["Authorization"]
     }
-      else {
-          // catch all log if the search could not be executed
-        console.log('Could not search tweets.');
-      }
   });
+  if (req.body) {
+    return qs.parse(req.body);
+  } else {
+    throw new Error('Cannot get an OAuth request token');
+  }
+}
+
+
+async function accessToken({
+  oauth_token,
+  oauth_token_secret
+}, verifier) {
+  const authHeader = oauth.toHeader(oauth.authorize({
+    url: accessTokenURL,
+    method: 'POST'
+  }));
+  const path = `https://api.twitter.com/oauth/access_token?oauth_verifier=${verifier}&oauth_token=${oauth_token}`
+  const req = await got.post(path, {
+    headers: {
+      Authorization: authHeader["Authorization"]
+    }
+  });
+  if (req.body) {
+    return qs.parse(req.body);
+  } else {
+    throw new Error('Cannot get an OAuth request token');
+  }
+}
+
+
+async function getRequest({
+  oauth_token,
+  oauth_token_secret
+}) {
+
+  const token = {
+    key: oauth_token,
+    secret: oauth_token_secret
+  };
+
+  const authHeader = oauth.toHeader(oauth.authorize({
+    url: endpointURL,
+    method: 'POST'
+  }, token));
+
+  const req = await got.post(endpointURL, {
+    json: data,
+    responseType: 'json',
+    headers: {
+      Authorization: authHeader["Authorization"],
+      'user-agent': "v2CreateTweetJS",
+      'content-type': "application/json",
+      'accept': "application/json"
+    }
+  });
+  if (req.body) {
+    return req.body;
+  } else {
+    throw new Error('Unsuccessful request');
+  }
+}
+
+
+export default async function twitterPost () {
+  try {
+    // Get request token
+    const oAuthRequestToken = await requestToken();
+    // Get authorization
+    authorizeURL.searchParams.append('oauth_token', oAuthRequestToken.oauth_token);
+    console.log('Please go here and authorize:', authorizeURL.href);
+    const pin = process.env.PIN
+    // Get the access token
+    const oAuthAccessToken = await accessToken(oAuthRequestToken, pin.trim());
+    // Make the request
+    const response = await getRequest(oAuthAccessToken);
+    console.dir(response, {
+      depth: null
+    });
+  } catch (e) {
+    console.log(e);
+    process.exit(-1);
+  }
+  process.exit();
 }
